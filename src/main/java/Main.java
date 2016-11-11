@@ -41,6 +41,7 @@ public class Main {
         getMessage("EndDate");
 
         //获取全部信息并打印成表格xml
+        //不需要身份证号
         getAllMessageWithoutID();
 
     }
@@ -57,8 +58,17 @@ public class Main {
             String department=Dispatch.call(disp,"Department").getString().trim();
             String startDate=Dispatch.call(disp,"StartDate").getString().trim();
             String endDate=Dispatch.call(disp,"EndDate").getString().trim();
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><news>"+"姓名："+name
-                    +"性别："+sex+"</news>";
+            return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><news>"
+                    +"姓名："+name+"<br/>"
+                    +"性别："+sex+"<br/>"
+                    +"民族："+nation+"<br/>"
+                    +"出生日期："+birthday+"<br/>"
+                    +"住址："+address+"<br/>"
+                    +"身份证号："+ID+"<br/>"
+                    +"签发机关："+department+"<br/>"
+                    +"发证日期："+startDate+"<br/>"
+                    +"有效期："+endDate+"<br/>"
+                    +"</news>";
         });
     }
 
