@@ -43,6 +43,10 @@ public class Main {
         //获取全部信息并打印成表格xml
         //不需要身份证号
         getAllMessageWithoutID();
+        getAllMessageWithID("ID");
+    }
+//在此之前是不是应该要有个上传信息的方法？？
+    private static void getAllMessageWithID(String id) {
 
     }
 
