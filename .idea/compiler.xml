@@ -26,6 +26,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="ace" target="1.5" />
       <module name="TestForJAVA" target="1.8" />
     </bytecodeTargetLevel>
   </component>
