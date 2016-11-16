@@ -5,12 +5,12 @@ import spark.Spark;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.zip.InflaterInputStream;
 
 import static spark.route.HttpMethod.get;
 
@@ -20,19 +20,21 @@ import static spark.route.HttpMethod.get;
 
 public class Main {
 
-    private static ActiveXComponent com;
-    private static Dispatch disp;
+    private static ActiveXComponent com= new ActiveXComponent("CLSID:0F55CC69-97EF-42A9-B63D-D1831CB2B3B9");
+    private static Dispatch disp= (Dispatch)com.getObject();
     static final Random random=new Random();
 
+    private static String srcPathName;
     public String base64=null;
-
+    private static byte[] b=null;
     public static void main(String[] args) throws SQLException {
-        com = new ActiveXComponent("CLSID:0F55CC69-97EF-42A9-B63D-D1831CB2B3B9");
-        disp = (Dispatch)com.getObject();
-
-        int srcPathName=random.nextInt(Integer.MAX_VALUE);
-        int ret = Dispatch.call(disp, "getCardInfo", new Variant("E:\\Img\\"+srcPathName+".bmp")).getInt();
-        if(ret!=0){
+       // init();
+//        com = new ActiveXComponent("CLSID:0F55CC69-97EF-42A9-B63D-D1831CB2B3B9");
+//        disp = (Dispatch)com.getObject();
+//while (true) {
+//    String srcPathName =Dispatch.call(disp,"name").getString();
+//    int ret = Dispatch.call(disp, "getCardInfo", new Variant("E:\\Img\\" + srcPathName + ".bmp")).getInt();
+//    if (ret != 0) {
 
 //            System.out.print(Dispatch.call(disp, "Sex").getString()+"\n");
 //            System.out.print(Dispatch.call(disp, "Nation").getString()+"\n");
@@ -42,8 +44,24 @@ public class Main {
 //            System.out.print(Dispatch.call(disp, "Department").getString()+"\n");
 //            System.out.print(Dispatch.call(disp, "StartDate").getString()+"\n");
 //            System.out.print(Dispatch.call(disp, "EndDate").getString()+"\n");
-            System.out.println("打开设备失败！");
+//        System.out.println("打开设备失败！");
+//    }
+
+    //用户请求返回图片信息
+       getMessageForImg();
+        File file=new File("E:\\test.bmp");
+        try {
+            FileOutputStream fos=new FileOutputStream(file);
+            fos.write(b);
+            fos.flush();
+            fos.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         //获取各项单项信息
 //        getMessage("Name");
 //        getMessage("Sex");
@@ -52,33 +70,83 @@ public class Main {
 //        getMessage("Address");
 //        getMessage("ID");
 //        getMessage("Department");
-//        getMessage("StartDate");
+ //     getMessage("StartDate");
 //        getMessage("EndDate");
 //
 //        //上传信息到数据库
-        //uploadMessageToSql();
-        //删除某个id下的身份证信息
-        //deleteMessage("265287990");
+   // uploadMessageToSql();
+    //删除某个id下的身份证信息
+    //deleteMessage("265287990");
 
-        //删除某个身份证号下的所有信息
+    //删除某个身份证号下的所有信息
 //        deleteMessageWithPersonId("441424199508272258");
 
 //        //获取全部信息并打印成表格xml
 //        //不需要身份证号
 //       getAllMessageWithoutID();
-     //
-        //getMessageIn("265287990");
+    //
+    //getMessageIn("265287990");
 
 
-
-        //图片转换
+    //图片转换
 //        ImgToString("E:\\Img\\head.bmp");
 //        StringToImg(ImgToString("E:\\Img\\head.bmp"),"E:\\Img\\boom.bmp");
-        //网页上传
-        //postMessage();
-        getAllMessageWithID();
+    //网页上传
+    //postMessage();
+    //getAllMessageWithID();
+    //  }
     }
 
+
+    public static void getMessageForImg() {
+        Spark.get("/message/Img",(request, response) -> {
+            init();
+            String path="E:\\Img\\"+srcPathName+".bmp";
+            System.out.println(srcPathName);
+//            File file=new File(path);
+//            System.out.println(getImageData(file,path));
+//            b=getImageData(file,path);
+//           return getImageData(file,path);
+            byte[] buff=null;
+            InputStream in=new FileInputStream(path);
+            buff=new byte[in.available()];
+            in.read(buff);
+            in.close();
+            b=buff;
+            System.out.println(buff);
+            return buff;
+        });
+
+    }
+    public static BufferedImage getImage(byte[] buff){
+        ByteArrayInputStream bais=new ByteArrayInputStream(buff);
+        BufferedImage image=null;
+        try {
+            image=ImageIO.read(bais);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return image;
+    }
+    public static byte[] getImageData(File file,String format){
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            BufferedImage bImage = ImageIO.read(new FileInputStream(file));
+            ImageIO.write(bImage, format, out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return out.toByteArray();
+    }
+    private static void init(){
+        srcPathName ="ace";
+        int ret = Dispatch.call(disp, "getCardInfo", new Variant("E:\\Img\\" + srcPathName + ".bmp")).getInt();
+       if (ret != 0) {
+          System.out.println("打开设备失败");
+        }else {
+        System.out.println("打开设备成功");
+    }
+    }
     private static void deleteMessageWithPersonId(String personId) throws SQLException {
         DbAccess dba=new DbAccess();
         dba.init();
@@ -262,6 +330,7 @@ public class Main {
             return Dispatch.call(disp,s).getString().trim();
         });
     }
+
 
 
 }

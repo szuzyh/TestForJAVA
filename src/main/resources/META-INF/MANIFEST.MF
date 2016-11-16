@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Class-Path: jetty-security-9.3.6.v20151106.jar slf4j-nop-1.7.5.jar jet
+ ty-xml-9.3.6.v20151106.jar jetty-server-9.3.6.v20151106.jar spark-cor
+ e-2.5.jar jetty-servlet-9.3.6.v20151106.jar websocket-common-9.3.6.v2
+ 0151106.jar websocket-server-9.3.6.v20151106.jar slf4j-api-1.7.13.jar
+  javax.servlet-api-3.1.0.jar jetty-util-9.3.6.v20151106.jar jetty-io-
+ 9.3.6.v20151106.jar jetty-http-9.3.6.v20151106.jar jacob.jar jetty-we
+ bapp-9.3.6.v20151106.jar mysql-connector-java-5.1.16-bin.jar websocke
+ t-servlet-9.3.6.v20151106.jar websocket-api-9.3.6.v20151106.jar webso
+ cket-client-9.3.6.v20151106.jar
+Main-Class: Main
+
