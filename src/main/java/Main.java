@@ -8,6 +8,8 @@ import sun.misc.BASE64Encoder;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.zip.InflaterInputStream;
@@ -49,18 +51,7 @@ public class Main {
 
     //用户请求返回图片信息
        getMessageForImg();
-        File file=new File("E:\\test.bmp");
-        try {
-            FileOutputStream fos=new FileOutputStream(file);
-            fos.write(b);
-            fos.flush();
-            fos.close();
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         //获取各项单项信息
 //        getMessage("Name");
@@ -101,7 +92,13 @@ public class Main {
     public static void getMessageForImg() {
         Spark.get("/message/Img",(request, response) -> {
             init();
+            URL urlfile = null;
+            HttpURLConnection httpUrl = null;
+            BufferedInputStream bis = null;
+            BufferedOutputStream bos = null;
+
             String path="E:\\Img\\"+srcPathName+".bmp";
+            File f = new File(path);
             System.out.println(srcPathName);
 //            File file=new File(path);
 //            System.out.println(getImageData(file,path));
@@ -112,8 +109,34 @@ public class Main {
             buff=new byte[in.available()];
             in.read(buff);
             in.close();
-            b=buff;
-            System.out.println(buff);
+            urlfile = new URL(path);
+            httpUrl = (HttpURLConnection)urlfile.openConnection();
+            httpUrl.connect();
+            bis = new BufferedInputStream(httpUrl.getInputStream());
+            bos = new BufferedOutputStream(new FileOutputStream(f));
+            int len = 2048;
+
+            while ((len = bis.read(buff)) != -1)
+            {
+                bos.write(buff, 0, len);
+            }
+            bos.flush();
+            bis.close();
+            httpUrl.disconnect();
+//
+//            System.out.println(buff);
+//            File file=new File("E:\\test.bmp");
+//            try {
+//                FileOutputStream fos=new FileOutputStream(file);
+//                fos.write(buff);
+//                fos.flush();
+//                fos.close();
+//
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             return buff;
         });
 
