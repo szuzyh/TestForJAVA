@@ -9,7 +9,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.zip.InflaterInputStream;
@@ -25,11 +27,15 @@ public class Main {
     private static ActiveXComponent com= new ActiveXComponent("CLSID:0F55CC69-97EF-42A9-B63D-D1831CB2B3B9");
     private static Dispatch disp= (Dispatch)com.getObject();
     static final Random random=new Random();
-
+    private static int splid;
     private static String srcPathName;
     public String base64=null;
     private static byte[] b=null;
     public static void main(String[] args) throws SQLException {
+
+        int id1=random.nextInt(Integer.MAX_VALUE);
+        splid=id1;
+        srcPathName=id1+"";
        // init();
 //        com = new ActiveXComponent("CLSID:0F55CC69-97EF-42A9-B63D-D1831CB2B3B9");
 //        disp = (Dispatch)com.getObject();
@@ -53,7 +59,8 @@ public class Main {
        getMessageForImg();
 
 
-        //获取各项单项信息
+
+       // 获取各项单项信息
 //        getMessage("Name");
 //        getMessage("Sex");
 //        getMessage("Nation");
@@ -61,13 +68,14 @@ public class Main {
 //        getMessage("Address");
 //        getMessage("ID");
 //        getMessage("Department");
- //     getMessage("StartDate");
+//         getMessage("StartDate");
 //        getMessage("EndDate");
-//
+
+        //getImgDate();  //需要id
 //        //上传信息到数据库
-   // uploadMessageToSql();
-    //删除某个id下的身份证信息
-    //deleteMessage("265287990");
+      // uploadMessageToSql();
+    //   删除某个id下的身份证信息
+    //  deleteMessage("265287990");
 
     //删除某个身份证号下的所有信息
 //        deleteMessageWithPersonId("441424199508272258");
@@ -76,7 +84,7 @@ public class Main {
 //        //不需要身份证号
 //       getAllMessageWithoutID();
     //
-    //getMessageIn("265287990");
+   // getMessageIn("595952606");
 
 
     //图片转换
@@ -84,85 +92,60 @@ public class Main {
 //        StringToImg(ImgToString("E:\\Img\\head.bmp"),"E:\\Img\\boom.bmp");
     //网页上传
     //postMessage();
-    //getAllMessageWithID();
+    getAllMessageWithID();
     //  }
     }
+
+    private static void getImgDate() {
+        Spark.get("/message/Img/:id",(request, response) -> {
+
+            DbAccess dba=new DbAccess();
+            dba.init();
+            String[] msg=dba.query1(request.params(":id"));
+            String name=msg[0];
+            System.out.println(name);
+            String personID=msg[5];
+            System.out.println(personID);
+            String imgDate=msg[9];
+            byte[] buff=null;
+            InputStream in=new FileInputStream(imgDate);
+            buff=new byte[in.available()];
+            in.read(buff);
+            response.header("Content-Type","image/bmp");
+            response.header("Content-disposition","attachment;fileName="+ URLEncoder.encode(name, "UTF-8")+"-"+personID+".bmp");
+            return buff;
+        });
+    }
+
+
 
 
     public static void getMessageForImg() {
         Spark.get("/message/Img",(request, response) -> {
             init();
-            URL urlfile = null;
-            HttpURLConnection httpUrl = null;
-            BufferedInputStream bis = null;
-            BufferedOutputStream bos = null;
-
+            String name=Dispatch.call(disp,"name").getString().trim();
+            String personID=Dispatch.call(disp,"ID").getString().trim();
             String path="E:\\Img\\"+srcPathName+".bmp";
-            File f = new File(path);
-            System.out.println(srcPathName);
-//            File file=new File(path);
-//            System.out.println(getImageData(file,path));
-//            b=getImageData(file,path);
-//           return getImageData(file,path);
+
             byte[] buff=null;
             InputStream in=new FileInputStream(path);
             buff=new byte[in.available()];
             in.read(buff);
-            in.close();
-            urlfile = new URL(path);
-            httpUrl = (HttpURLConnection)urlfile.openConnection();
-            httpUrl.connect();
-            bis = new BufferedInputStream(httpUrl.getInputStream());
-            bos = new BufferedOutputStream(new FileOutputStream(f));
-            int len = 2048;
 
-            while ((len = bis.read(buff)) != -1)
-            {
-                bos.write(buff, 0, len);
-            }
-            bos.flush();
-            bis.close();
-            httpUrl.disconnect();
-//
-//            System.out.println(buff);
-//            File file=new File("E:\\test.bmp");
-//            try {
-//                FileOutputStream fos=new FileOutputStream(file);
-//                fos.write(buff);
-//                fos.flush();
-//                fos.close();
-//
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            response.header("Content-Type","image/bmp");
+         //   response.header("Content-disposition","attachment;fileName="+"aqi.bmp");
+            //response.header("Content-disposition","attachment;fileName="+srcPathName+".bmp");//自动下载
+           // response.header("Content-disposition","attachment;fileName="+ URLEncoder.encode(name, "UTF-8")+"-"+personID+".bmp");
+
             return buff;
+
         });
 
     }
-    public static BufferedImage getImage(byte[] buff){
-        ByteArrayInputStream bais=new ByteArrayInputStream(buff);
-        BufferedImage image=null;
-        try {
-            image=ImageIO.read(bais);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return image;
-    }
-    public static byte[] getImageData(File file,String format){
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            BufferedImage bImage = ImageIO.read(new FileInputStream(file));
-            ImageIO.write(bImage, format, out);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return out.toByteArray();
-    }
+
+
     private static void init(){
-        srcPathName ="ace";
+
         int ret = Dispatch.call(disp, "getCardInfo", new Variant("E:\\Img\\" + srcPathName + ".bmp")).getInt();
        if (ret != 0) {
           System.out.println("打开设备失败");
@@ -186,15 +169,6 @@ public class Main {
         DbAccess dba=new DbAccess();
         dba.init();
         String[] msg=dba.query1(id);
-//        String name=null,sex=null,nation=null
-//                ,birthday = null,address=null,department=null
-//                ,personId=null,startDate=null,endDate=null,imgDate=null;
-//        String[] text={name,sex,nation,birthday,address,personId,department,startDate,endDate,imgDate};
-//        for (int i=0;i<msg.length;i++){
-//            System.out.println(msg[i]);
-//            text[i]=msg[i];
-//
-//        }
         String name=msg[0];
         String sex=msg[1];
         String nation=msg[2];
@@ -206,6 +180,7 @@ public class Main {
         String endDate=msg[8];
         String imgDate=msg[9];
 //
+        System.out.println(imgDate);
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><news>"
                 +"姓名："+name+"<br/>"
                 +"性别："+sex+"<br/>"
@@ -216,6 +191,7 @@ public class Main {
                 +"签发机关："+department+"<br/>"
                 +"发证日期："+startDate+"<br/>"
                 +"有效期："+endDate+"<br/>"
+                +"图片路径："+imgDate+"<br/>"
                 +"</news>";
     }
 
@@ -227,10 +203,12 @@ public class Main {
        });
     }
 
+
     //上传信息
     private static void uploadMessageToSql() throws SQLException {
-        int id1=random.nextInt(Integer.MAX_VALUE);
-        String id=id1+"";
+        init();
+
+        String id=splid+"";
         String name=Dispatch.call(disp,"Name").getString().trim();
         String sex=Dispatch.call(disp,"Sex").getString().trim();
         String nation=Dispatch.call(disp,"Nation").getString().trim();
@@ -241,9 +219,10 @@ public class Main {
         String startDate=Dispatch.call(disp,"StartDate").getString().trim();
         String endDate=Dispatch.call(disp,"EndDate").getString().trim();
 
+        String imgPath="E://"+"Img//"+srcPathName+".bmp";
         DbAccess dba=new DbAccess();
         dba.init();
-        dba.insert(id,name,sex,nation,birthday,address,ID,department,startDate,endDate,"123");
+        dba.insert(id,name,sex,nation,birthday,address,ID,department,startDate,endDate,imgPath);
     }
 //字符串转化为图片并保存
     private static boolean StringToImg(String base64String, String createPath) {
@@ -314,10 +293,11 @@ public class Main {
 //                    +"发证日期："+startDate+"<br/>"
 //                    +"有效期："+endDate+"<br/>"
 //                    +"</news>";
+            response.header("Content-Type","application/json");
             String callback="{\"UserID\":\""+request.params(":id")+"\",\"Message\":{\"name\":\""+name+"\"" +
                     ",\"sex\":\""+sex+"\",\"natiom\":\"" + nation + "\",\"birthday\":\"" + birthday + "\"" +
                     ",\"address\":\"" + address + "\",\"personId\":\"" + personId + "\",\"department\":\"" + department + "\"" +
-                    ",\"startDate\":\"" + startDate + "\",\"endDate\":\"" + endDate + "\"}}";
+                    ",\"startDate\":\"" + startDate + "\",\"endDate\":\"" + endDate + "\",\"imgDate\":\"" + imgDate + "\"}}";
             return callback;
         });
     }
@@ -325,6 +305,7 @@ public class Main {
     private static void getAllMessageWithoutID() {
 
         Spark.get("/message/user",(request, response) -> {
+            init();
             String name=Dispatch.call(disp,"Name").getString().trim();
             String sex=Dispatch.call(disp,"Sex").getString().trim();
             String nation=Dispatch.call(disp,"Nation").getString().trim();
@@ -350,6 +331,7 @@ public class Main {
 
     private static void getMessage(String s) {
         Spark.get("/message/"+s,(request, response) -> {
+            init();
             return Dispatch.call(disp,s).getString().trim();
         });
     }

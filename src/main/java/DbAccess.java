@@ -37,14 +37,16 @@ public class DbAccess {
     public String[] query1(String id) throws SQLException {
         String[] text={"name","sex","nation","birthday","address",
                 "department","personId","startDate","endDate","imgDate"};
-        String[] message = new String[10];
+        String[] message = new String[11];
 
         for (int i=0;i<text.length;i++){
             String strName="select "+text[i]+" from usermessage where id='"+id+"'";
             ResultSet resultSet=statement.executeQuery(strName);
-            resultSet.next();
-            String msg=resultSet.getString(text[i]);
-            message[i]=msg;
+           if (resultSet.next()){
+               String msg=resultSet.getString(text[i]);
+               message[i]=msg;
+           }
+
         }
         return message;
     }
